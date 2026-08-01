@@ -1,4 +1,4 @@
-import sequelize from "../../config/sequelize";
+import sequelize from "../../database/sequelize.js";
 import { DataTypes } from "sequelize";
 
 const Employee = sequelize.define("Employee",{
@@ -22,10 +22,16 @@ const Employee = sequelize.define("Employee",{
     },
     isActive: {
         type:DataTypes.BOOLEAN,
-        allowNull: false
+        allowNull: false,
+        default: true
     },
     QRcodeTokenHash:{
         type:DataTypes.STRING,
+        allowNull: false,
+        unique: true
+    },
+    QRcodePath:{
+        type: DataTypes.STRING,
         allowNull: false,
         unique: true
     }
@@ -34,3 +40,4 @@ const Employee = sequelize.define("Employee",{
 });
 
 export default Employee;
+
