@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import qrcode from "qrcode";
 import crypto from "node:crypto";
+import { Op } from "sequelize";
 
 import Employee from "./model.js";
 import * as throwError from "../../utils/throwError.js";
@@ -124,8 +125,86 @@ export const generateNewQRcode = async (employeeId) => {
     };
 };
 // Read all employees
-// input: query parameters, handle all 6 query parameters
+// input: query parameters, handle all 5 query parameters
 // output: employees list + pagination metadata
+export const getEmployees = async ({page = 1, sort = "lastName:asc", fields, filter = {}, search}) => {
+    // Pagination
+    const limit = 25;
+    const offset = (page - 1) * limit;
+    // Field selection
+    const allowedFields = ["id","firstName","lastName","isActive","photoURL","createdAt","updatedAt"];
+    let attributes = allowedFields;
+    if(fields){
+        attributes = fields.split(",").filter(field => allowedFields.includes(field));
+    }
+    // Filtering
+    let where = {};
+    if(filter.isActive !== undefined){
+        where.isActive = filter.isActive === "true";
+    }
+    // Searching
+    if(search){
+        where[Op.or] = [
+            {
+                firstName:{
+                    [Op.like]: `%${search}%`
+                }
+            },
+            {
+                lastName:{
+                    [Op.like]: `%${search}%`
+                }
+            }
+        ];
+
+    }
+    // Sorting
+    let order = [["lastName","ASC"]];
+    if(sort){
+        const [field, direction] = sort.split(":");
+        const allowedSortFields = ["lastName","firstName","createdAt","updatedAt"];
+        if(allowedSortFields.includes(field)){
+            order = [
+                [
+                    field,
+                    direction?.toUpperCase() === "DESC"
+                        ? "DESC"
+                        : "ASC"
+                ]
+            ];
+        }
+    }
+    const result = await Employee.findAndCountAll({
+        attributes,
+        where,
+        limit,
+        offset,
+        order
+    });
+    return {
+        page: Number(page),
+        limit,
+        totalRecords: result.count,
+        totalPages: Math.ceil(result.count / limit),
+        data: result.rows
+    };
+};
+
+// Aggregation
+// Input: nothing
+// output: statistical Result
+export const employeeStatistics = async () => {
+    const totalEmployees = await Employee.count();
+    const totalActive = await Employee.count({
+        where:{
+            isActive:true
+        }
+    });
+    return {
+        totalEmployees,
+        totalActiveEmployees: totalActive
+    };
+};
 
 
 

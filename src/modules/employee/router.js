@@ -12,5 +12,6 @@ router.delete("/employees/:id", employeeController.deleteEmployee);
 
 router.post("/employees/:id/photo", upload.single("photo"), employeeController.uploadPhoto);
 router.post("/employees/:id/qrcode", employeeController.generateNewQRcode);
+router.get("/employees/statistics", employeeController.employeesStatistics);
 
 export default router;
