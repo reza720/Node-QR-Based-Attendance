@@ -127,53 +127,19 @@ export const generateNewQRcode = async (employeeId) => {
 // Read all employees
 // input: query parameters, handle all 5 query parameters
 // output: employees list + pagination metadata
-export const getEmployees = async ({page = 1, sort = "lastName:asc", fields, filter = {}, search}) => {
-    // Pagination
-    const limit = 25;
-    const offset = (page - 1) * limit;
-    // Field selection
-    const allowedFields = ["id","firstName","lastName","isActive","photoURL","createdAt","updatedAt"];
-    let attributes = allowedFields;
-    if(fields){
-        attributes = fields.split(",").filter(field => allowedFields.includes(field));
-    }
-    // Filtering
-    let where = {};
-    if(filter.isActive !== undefined){
-        where.isActive = filter.isActive === "true";
-    }
-    // Searching
-    if(search){
-        where[Op.or] = [
-            {
-                firstName:{
-                    [Op.like]: `%${search}%`
-                }
-            },
-            {
-                lastName:{
-                    [Op.like]: `%${search}%`
-                }
-            }
-        ];
+export const getEmployees = async (options = {}) => {
+    const {
+        page = 1,
+        sort = "lastName:asc",
+        fields,
+        filter = {},
+        search
+    } = options;
 
-    }
-    // Sorting
-    let order = [["lastName","ASC"]];
-    if(sort){
-        const [field, direction] = sort.split(":");
-        const allowedSortFields = ["lastName","firstName","createdAt","updatedAt"];
-        if(allowedSortFields.includes(field)){
-            order = [
-                [
-                    field,
-                    direction?.toUpperCase() === "DESC"
-                        ? "DESC"
-                        : "ASC"
-                ]
-            ];
-        }
-    }
+    const { limit, offset } = buildPagination(page);
+    const attributes = buildAttributes(fields);
+    const where = buildWhere(filter, search);
+    const order = buildOrder(sort);
     const result = await Employee.findAndCountAll({
         attributes,
         where,
@@ -181,6 +147,7 @@ export const getEmployees = async ({page = 1, sort = "lastName:asc", fields, fil
         offset,
         order
     });
+
     return {
         page: Number(page),
         limit,
@@ -228,3 +195,76 @@ function generateToken(){
         tokenHash
     }
 };
+
+// Pagination
+const buildPagination = (page) => {
+    const limit = 25;
+    const offset = (page - 1) * limit;
+    return {
+        limit,
+        offset
+    }
+};
+
+// Field Selection
+const buildAttributes = (fields) => {
+    const allowedFields=["id","firstName","lastName","photoURL","isActive","createdAt","updatedAt"];
+    if(!fields){
+        return allowedFields;
+    }
+
+    return fields
+        .split(",")
+        .map(field => field.trim())
+        .filter(field => allowedFields.includes(field));
+}
+
+// Filter
+const buildFilter = (filter) => {
+    const where = {};
+
+    if (filter.isActive !== undefined) {
+        where.isActive = filter.isActive === "true";
+    }
+    return where;
+};
+
+// Search
+const buildSearch = (search) => {
+    if (!search) return {};
+
+    return {
+        [Op.or]: [
+            {
+                firstName: {
+                    [Op.like]: `%${search}%`
+                }
+            },
+            {
+                lastName: {
+                    [Op.like]: `%${search}%`
+                }
+            }
+        ]
+    };
+};
+
+// Sorting
+const buildOrder = (sort) => {
+    const allowedSortFields = ["lastName","firstName","createdAt","updatedAt"];
+
+    const [field, direction] = sort.split(":");
+    if (!allowedSortFields.includes(field)) {
+        return [["lastName", "ASC"]];
+    }
+
+    return [[
+        field,
+        direction?.toUpperCase() === "DESC"
+            ? "DESC"
+            : "ASC"
+    ]];
+};
+
+
+

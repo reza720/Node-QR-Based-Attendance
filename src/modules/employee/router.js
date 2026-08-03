@@ -5,7 +5,7 @@ import upload from "../../config/multer.js";
 const router = express.Router();
 
 router.post("/employees", employeeController.registerEmployee);
-//router.get("/employees");
+router.get("/employees", employeeController.getEmployees);
 router.get("/employees/:id", employeeController.getEmployee);
 router.patch("/employees/:id", employeeController.updateEmployee);
 router.delete("/employees/:id", employeeController.deleteEmployee);
