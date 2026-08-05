@@ -4,14 +4,16 @@ import upload from "../../config/multer.js";
 
 const router = express.Router();
 
-router.post("/employees", employeeController.registerEmployee);
-router.get("/employees", employeeController.getEmployees);
-router.get("/employees/:id", employeeController.getEmployee);
-router.patch("/employees/:id", employeeController.updateEmployee);
-router.delete("/employees/:id", employeeController.deleteEmployee);
+router.post("/", employeeController.registerEmployee);
+router.get("/", employeeController.getEmployees);
 
-router.post("/employees/:id/photo", upload.single("photo"), employeeController.uploadPhoto);
-router.post("/employees/:id/qrcode", employeeController.generateNewQRcode);
-router.get("/employees/statistics", employeeController.employeesStatistics);
+router.get("/statistics", employeeController.employeesStatistics);
+
+router.get("/:id", employeeController.getEmployee);
+router.patch("/:id", employeeController.updateEmployee);
+router.delete("/:id", employeeController.deleteEmployee);
+
+router.post("/:id/photo", upload.single("photo"), employeeController.uploadPhoto);
+router.post("/:id/qrcode", employeeController.generateNewQRcode);
 
 export default router;

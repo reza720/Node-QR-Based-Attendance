@@ -23,7 +23,7 @@ const Employee = sequelize.define("Employee",{
     isActive: {
         type:DataTypes.BOOLEAN,
         allowNull: false,
-        default: true
+        defaultValue: true
     },
     QRcodeTokenHash:{
         type:DataTypes.STRING,

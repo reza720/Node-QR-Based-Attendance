@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import qrcode from "qrcode";
 import crypto from "node:crypto";
 import { Op } from "sequelize";
+import sequelize from "../../database/sequelize.js";
 
 import Employee from "./model.js";
 import * as throwError from "../../utils/throwError.js";
@@ -15,23 +16,43 @@ const QRcodeDir = path.join(__dirname, "../../../storage/QRcodes");
 // register: 
 // input: firstName, lastName
 // output: employee registed in DB, QR generated, data returned
-export const registerEmployee = async ({firstName, lastName}) => {
-    const {token, tokenHash} = generateToken();
-    const qrPath = await generateQRcode(token);
+export const registerEmployee = async ({ firstName, lastName }) => {
+    const transaction = await sequelize.transaction();
+    let qrPath = null;
+    try {
+        const { token, tokenHash } = generateToken();
 
-    const employee = await Employee.create({
-        firstName, 
-        lastName,
-        QRcodeTokenHash: tokenHash,
-        QRcodePath: qrPath
-    });
+        const employee = await Employee.create(
+            {
+                firstName,
+                lastName,
+                QRcodeTokenHash: tokenHash
+            },
+            { transaction }
+        );
+        qrPath = await generateQRcode(token);
+        await employee.update(
+            {
+                QRcodePath: qrPath
+            },
+            { transaction }
+        );
+        await transaction.commit();
 
-    return {
-        id: employee.id,
-        fullName: employee.firstName +" "+ employee.lastName,
-        isActive: employee.isActive,
-        QRcodePath: employee.QRcodePath
-    };
+        return {
+            id: employee.id,
+            fullName: `${employee.firstName} ${employee.lastName}`,
+            isActive: employee.isActive,
+            QRcodePath: qrPath
+        };
+
+    } catch (error) {
+        await transaction.rollback();
+        if (qrPath) {
+            await fs.unlink(qrPath).catch(() => {});
+        }
+        throw error;
+    }
 };
 // upload photo
 // input: employeeId, file
