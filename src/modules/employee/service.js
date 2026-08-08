@@ -7,7 +7,7 @@ import { Op } from "sequelize";
 import sequelize from "../../database/sequelize.js";
 
 import Employee from "./model.js";
-import * as throwError from "../../utils/throwError.js";
+import throwError from "../../utils/throwError.js"
 import deleteFile from "../../utils/deleteFile.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -59,13 +59,28 @@ export const registerEmployee = async ({ firstName, lastName }) => {
 // input: employeeId, file
 // output: photo is upload and path is stored in db, retunr file back front end
 export const uploadPhoto = async (employeeId, file) => {
-    const employee = await Employee.findByPk(employeeId);
-    if(!employee) throwError("Employee not found", 404);
-    if(!file) throwError("File is required", 400);
+    if(!file) throwError("File not found", 400);
 
-    await employee.update({
-        photoURL: file.path
-    });
+    const employee = await Employee.findByPk(employeeId);
+    if(!employee) {
+        await deleteFile(file.path);
+        throwError("Employee not found", 404);
+    }
+
+    const oldFilePath = employee.photoURL;
+    try{
+        await employee.update({
+            photoURL: file.path
+        });
+    }
+    catch(err){
+        await deleteFile(file.path);
+        throw err;
+    }
+    
+    if(oldFilePath){
+        await deleteFile(oldFilePath);
+    }
 
     return employee.photoURL;
 }
