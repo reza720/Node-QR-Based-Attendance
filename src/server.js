@@ -5,7 +5,7 @@ import env from "./config/env.js";
 (async()=> {
     try{
         await database.authenticate();
-        await database.sync();
+        await database.sync({alter: true});
         console.log("Database conneted");
 
         const port = env.server.port || 5000;

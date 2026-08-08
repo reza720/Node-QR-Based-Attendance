@@ -8,6 +8,7 @@ import sequelize from "../../database/sequelize.js";
 
 import Employee from "./model.js";
 import * as throwError from "../../utils/throwError.js";
+import deleteFile from "../../utils/deleteFile.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -121,7 +122,14 @@ export const deleteEmployee = async (employeeId) => {
     const employee = await Employee.findByPk(employeeId);
     if(!employee) throwError("Employee not found", 404);
     
+    const {QRcodePath, photoURL} = employee;
     await employee.destroy();
+    if(QRcodePath){
+        await deleteFile(QRcodePath);
+    }
+    if(photoURL){
+        await deleteFile(photoURL);
+    }
 }
 // Generate new QR
 // input: employee id

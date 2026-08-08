@@ -72,7 +72,7 @@ export const updateEmployee = async (req, res, next) => {
 // output: success, status code, message
 export const deleteEmployee = async (req, res, next) => {
     try{
-        await employeeService.deleteEmployee(req.params);
+        await employeeService.deleteEmployee(req.params.id);
         res.status(200).json({
             success: true,
             message: "Employee deleted"

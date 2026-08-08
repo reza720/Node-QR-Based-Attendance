@@ -32,7 +32,7 @@ const Employee = sequelize.define("Employee",{
     },
     QRcodePath:{
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
         unique: true
     }
 },{
