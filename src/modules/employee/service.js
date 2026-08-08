@@ -201,24 +201,6 @@ export const getEmployees = async (options = {}) => {
     };
 };
 
-// Aggregation
-// Input: nothing
-// output: statistical Result
-export const employeeStatistics = async () => {
-    const totalEmployees = await Employee.count();
-    const totalActive = await Employee.count({
-        where:{
-            isActive:true
-        }
-    });
-    return {
-        totalEmployees,
-        totalActiveEmployees: totalActive
-    };
-};
-
-
-
 
 // ------------ Helper Functions ---------------
 

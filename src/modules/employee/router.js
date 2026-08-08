@@ -6,13 +6,12 @@ const router = express.Router();
 
 router.post("/", employeeController.registerEmployee);
 router.get("/", employeeController.getEmployees);
-router.get("/statistics", employeeController.employeesStatistics);
-
 router.get("/:id", employeeController.getEmployee);
 router.patch("/:id", employeeController.updateEmployee);
 router.delete("/:id", employeeController.deleteEmployee);
 
 router.post("/:id/photo", upload.single("photo"), employeeController.uploadPhoto);
 router.post("/:id/qrcode", employeeController.generateNewQRcode);
+//router.get("/:id/attendance");
 
 export default router;

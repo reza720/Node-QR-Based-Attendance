@@ -128,22 +128,7 @@ export const getEmployees = async (req, res, next) => {
     }
 };
 
-// Statistics
-// input: nothing
-// output: statistics of employees
-export const employeesStatistics = async(req, res, next) => {
-    try{
-        const statistics = await employeeService.getEmployeeStatistics();
-        res.status(200).json({
-            success: true,
-            message: "Statistics retrieved successfully.",
-            statistics
-        });
-    }
-    catch(err){
-        next(err);
-    }
-};
+
 
 
 
