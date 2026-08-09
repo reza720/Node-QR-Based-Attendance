@@ -1,5 +1,6 @@
 import * as employeeService from "./service.js"
 
+
 // register
 // input: firstName and lastName from req.body
 // output: success, status code, message, data

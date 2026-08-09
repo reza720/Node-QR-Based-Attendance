@@ -7,7 +7,7 @@ const router = express.Router();
 router.post("/", employeeController.registerEmployee);
 router.get("/", employeeController.getEmployees);
 router.get("/:id", employeeController.getEmployee);
-router.patch("/:id", employeeController.updateEmployee);
+router.patch("/:id", upload.single("photo"), employeeController.updateEmployee);
 router.delete("/:id", employeeController.deleteEmployee);
 
 router.post("/:id/photo", upload.single("photo"), employeeController.uploadPhoto);

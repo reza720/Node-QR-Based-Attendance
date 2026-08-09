@@ -104,27 +104,37 @@ export const getEmployee = async (employeeId) => {
 // output: update happend in the DB
 export const updateEmployee = async (employeeId, data, file) => {
     const employee = await Employee.findByPk(employeeId);
-    if(!employee) throwError("Employee not found", 404);
-
+    if (!employee) {
+        throwError("Employee not found", 404);
+    }
     const updateData = {};
-    if(data.firstName !== undefined){
+    if (data.firstName !== undefined) {
         updateData.firstName = data.firstName;
     }
-    if(data.lastName !== undefined){
+    if (data.lastName !== undefined) {
         updateData.lastName = data.lastName;
     }
-    if(data.isActive !== undefined){
+    if (data.isActive !== undefined) {
         updateData.isActive = data.isActive;
     }
-    if(file){
+    const oldPhotoPath = employee.photoURL;
+    if (file) {
         updateData.photoURL = file.path;
+        try {
+            await employee.update(updateData);
+            if (oldPhotoPath) {
+                await deleteFile(oldPhotoPath);
+            }
+        } catch (err) {
+            await deleteFile(file.path);
+            throw err;
+        }
+    } else {
+        await employee.update(updateData);
     }
-    
-    await employee.update(updateData);
-
     return {
         id: employee.id,
-        fullName: employee.firstName +" "+ employee.lastName,
+        fullName: employee.firstName + " " + employee.lastName,
         photoURL: employee.photoURL,
         isActive: employee.isActive,
         QRcode: employee.QRcodePath
@@ -151,21 +161,30 @@ export const deleteEmployee = async (employeeId) => {
 // output: new token generated hashed replaced for the past one, QR generated from new one
 export const generateNewQRcode = async (employeeId) => {
     const employee = await Employee.findByPk(employeeId);
-    if(!employee) throwError("Employee not found", 404);
+    if (!employee) throwError("Employee not found", 404);
 
-    const {token, tokenHash} = generateToken();
+    const { token, tokenHash } = generateToken();
     const newQRcodePath = await generateQRcode(token);
 
-    await employee.update({
-        QRcodeTokenHash: tokenHash
-    });
-
+    const oldQRcodePath = employee.QRcodePath;
+    try {
+        await employee.update({
+            QRcodeTokenHash: tokenHash,
+            QRcodePath: newQRcodePath
+        });
+        if (oldQRcodePath) {
+            await deleteFile(oldQRcodePath);
+        }
+    } catch (err) {
+        await deleteFile(newQRcodePath);
+        throw err;
+    }
     return {
         id: employee.id,
-        fullName: employee.firstName +" "+ employee.lastName,
+        fullName: employee.firstName + " " + employee.lastName,
         photoURL: employee.photoURL,
         isActive: employee.isActive,
-        QRcodePath: newQRcodePath
+        QRcodePath: employee.QRcodePath
     };
 };
 // Read all employees
