@@ -19,10 +19,11 @@ const QRcodeDir = path.join(__dirname, "../../../storage/QRcodes");
 // output: employee registed in DB, QR generated, data returned
 export const registerEmployee = async ({ firstName, lastName }) => {
     const transaction = await sequelize.transaction();
+    console.log("Transaction starts");
     let qrPath = null;
+    console.log("qr path ==", qrPath);
     try {
         const { token, tokenHash } = generateToken();
-
         const employee = await Employee.create(
             {
                 firstName,
@@ -46,7 +47,6 @@ export const registerEmployee = async ({ firstName, lastName }) => {
             isActive: employee.isActive,
             QRcodePath: qrPath
         };
-
     } catch (error) {
         await transaction.rollback();
         if (qrPath) {
