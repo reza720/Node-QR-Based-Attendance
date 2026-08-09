@@ -7,7 +7,7 @@ import crypto from "node:crypto";
 // Input: Token generated from reading QR code
 //flow:Hash toke -> fine employee with hashedtoken -> check employee existence -> check if employee is active -> check attendace existence with data: if not exist put checkin and chekcout to null, if exist and checkout == to null put checkout, if not null error
 // output: employee basic details + attendance details
-const scanService = async (token) => {
+export const scanAttendance = async (token) => {
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
     const employee = await Employee.findOne({
@@ -51,8 +51,33 @@ const scanService = async (token) => {
         action: attendance.checkOutTime ? "checked-out" : "checked-in"
     };
 };
-
-
+// getTodaysAttendance
+// input: nothing
+// output: rows (employee basic details + attendace)
+export const todayAttendance = () => {
+    const today = new Date().toISOString().split("T")[0];
+    const todayAttendance = await Attendance.findAll({
+        where: {
+            date: today
+        }, 
+        include:[
+            {
+                model: Employee,
+                attributes:[
+                    "id",
+                    "firstName",
+                    "lastName"
+                ]
+            }
+        ],
+        attributes:[
+            "date",
+            "checkInTime",
+            "checkOutTime"
+        ]
+    });
+    return todayAttendance;
+}
 
 // getAllAttendance Service
 // input: quary options
@@ -60,11 +85,6 @@ const scanService = async (token) => {
 // output: rows(attendace + emplyee basic details) and pagaination metadata
 
 
-
-
-// getTodaysAttendance
-// input: nothing
-// output: rows (employee basic details + attendace)
 
 
 
