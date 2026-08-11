@@ -195,13 +195,19 @@ export const getEmployees = async (options = {}) => {
         page = 1,
         sort = "lastName:asc",
         fields,
-        filter = {},
+        filter = {
+            isActive
+        },
         search
     } = options;
-
     const { limit, offset } = buildPagination(page);
     const attributes = buildAttributes(fields);
-    const where = buildWhere(filter, search);
+    const filterWhere = buildFilter(filter);
+    const searchWhere = buildSearch(search);
+    const where = {
+        ...filterWhere,
+        ...searchWhere
+    };
     const order = buildOrder(sort);
     const result = await Employee.findAndCountAll({
         attributes,
@@ -210,7 +216,6 @@ export const getEmployees = async (options = {}) => {
         offset,
         order
     });
-
     return {
         page: Number(page),
         limit,
@@ -296,19 +301,21 @@ const buildSearch = (search) => {
 
 // Sorting
 const buildOrder = (sort) => {
-    const allowedSortFields = ["lastName","firstName","createdAt","updatedAt"];
+    if(!sort){
+        return [];
+    }
+    const {field, direction="asc"} = sort.split(":");
+    const allowedSortFields = ["lastName","firstName"];
+    const allowedDirections = ["asc", "desc"];
 
-    const [field, direction] = sort.split(":");
     if (!allowedSortFields.includes(field)) {
-        return [["lastName", "ASC"]];
+        return [];
+    }
+    if (!allowedDirections.includes(direction)){
+        return [];
     }
 
-    return [[
-        field,
-        direction?.toUpperCase() === "DESC"
-            ? "DESC"
-            : "ASC"
-    ]];
+    return [[field, direction.toUpperCase()]];
 };
 
 

@@ -19,9 +19,9 @@ export const scanAttendance = async (req, res, next)=> {
 // get to day attendace
 // req: just call the service and store
 // res: success, status, message, and data returned from service
-export const todayAttendance = async (req, res, next) => {
+export const getTodayAttendance = async (req, res, next) => {
     try{
-        const todayAttendance = await attendanceService.todayAttendance();
+        const todayAttendance = await attendanceService.getTodayAttendance();
         res.status(200).json({
             success: true,
             message: "Today's attendance records retrieved successfully",
@@ -36,4 +36,21 @@ export const todayAttendance = async (req, res, next) => {
 // get All Attendace Controller
 // req: Quary parameters
 // as previous module
+export const getAttendances = async (req, res, next) => {
+    try{
+        const attendances = await attendanceService.getAttendances({
+            page: req.query.page,
+            limit: req.query.limit,
+            search: req.query.search
+        });
+        res.status(200).json({
+            success: true,
+            message: "Attendances fetched",
+            attendances
+        });
+    }
+    catch(err){
+        next(err);
+    }
+};
 

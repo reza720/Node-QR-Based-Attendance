@@ -115,15 +115,9 @@ export const getEmployees = async (req, res, next) => {
     
         res.status(200).json({
             success: true,
-            pagination: {
-                page: employees.page,
-                limit: employees.limit,
-                totalPages: employees.totalPages,
-                totalRecords: employees.totalRecords
-            },
-            data: employees.data
+            message: "Employees fetched",
+            employees
         });
-
     } catch (err) {
         next(err);
     }

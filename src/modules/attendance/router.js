@@ -3,6 +3,9 @@ import express from "express";
 const router = express.Router();
 
 router.post("/scan", attendanceController.scanAttendance);
-router.get("/today", attendanceController.todayAttendance);
-//router.get("/");
+router.get("/today", attendanceController.getTodayAttendance);
+router.get("/", attendanceController.getAttendances);
+
+export default router;
+
 

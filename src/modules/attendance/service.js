@@ -2,6 +2,7 @@ import Attendance from "./model.js";
 import Employee from "../employee/model.js";
 import throwError from "../../utils/throwError.js";
 import crypto from "node:crypto";
+import { Op } from "sequelize";
 
 // Scan Service
 // Input: Token generated from reading QR code
@@ -54,7 +55,7 @@ export const scanAttendance = async (token) => {
 // getTodaysAttendance
 // input: nothing
 // output: rows (employee basic details + attendace)
-export const todayAttendance = () => {
+export const getTodayAttendance = () => {
     const today = new Date().toISOString().split("T")[0];
     const todayAttendance = await Attendance.findAll({
         where: {
@@ -81,8 +82,62 @@ export const todayAttendance = () => {
 
 // getAllAttendance Service
 // input: quary options
-// support: search by name, page 30, sort by date(desc), filter by emloyeeId/date 
+// support: search by name, pageniation, sort by date(desc) by default
 // output: rows(attendace + emplyee basic details) and pagaination metadata
+export const getAttendances = async (options = {}) => {
+    const {
+        page = 1,
+        limit = 20,
+        search
+    } = options;
+
+    const offset = (page - 1) * limit;
+    const where = search
+        ? {
+            [Op.or]: [
+                {
+                    "$Employee.firstName$": {
+                        [Op.like]: `%${search}%`
+                    }
+                },
+                {
+                    "$Employee.lastName$": {
+                        [Op.like]: `%${search}%`
+                    }
+                }
+            ]
+        }
+        : {};
+    const attendances = await Attendance.findAndCountAll({
+        where,
+        attributes: [
+            "date",
+            "checkInTime",
+            "checkOutTime"
+        ],
+        include: [
+            {
+                model: Employee,
+                attributes: [
+                    "id",
+                    "firstName",
+                    "lastName"
+                ]
+            }
+        ],
+        limit: Number(limit),
+        offset
+    });
+
+    return {
+        page: Number(page),
+        limit: Number(limit),
+        totalAttendances: attendances.count,
+        totalPages: Math.ceil(attendances.count / limit),
+        attendances: attendances.rows
+    };
+};
+
 
 
 
