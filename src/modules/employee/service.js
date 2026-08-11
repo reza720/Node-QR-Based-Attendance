@@ -188,40 +188,42 @@ export const generateNewQRcode = async (employeeId) => {
     };
 };
 // Read all employees
-// input: query parameters, handle all 5 query parameters
+// input: pagination, sort by first(ASC default), filter by isActive
+// Search by first or lastname
 // output: employees list + pagination metadata
 export const getEmployees = async (options = {}) => {
     const {
         page = 1,
-        sort = "lastName:asc",
-        fields,
-        filter = {
-            isActive
-        },
+        limit = 30,
+        isActive,
         search
     } = options;
-    const { limit, offset } = buildPagination(page);
-    const attributes = buildAttributes(fields);
-    const filterWhere = buildFilter(filter);
-    const searchWhere = buildSearch(search);
-    const where = {
-        ...filterWhere,
-        ...searchWhere
-    };
-    const order = buildOrder(sort);
-    const result = await Employee.findAndCountAll({
-        attributes,
+
+    const offset = (page - 1) * limit;
+    const where = {};
+    if (isActive !== undefined) {
+        where.isActive = isActive;
+    }
+    if (search) {
+        where[Op.or] = [
+            {firstName: {[Op.like]: `%${search}%`}},
+            {lastName: {[Op.like]: `%${search}%`}}
+        ];
+    }
+
+    const employees = await Employee.findAndCountAll({
         where,
-        limit,
+        limit: Number(limit),
         offset,
-        order
+        order: [["firstName", "ASC"]]
     });
+
     return {
         page: Number(page),
-        limit,
-        totalRecords: result.count,
-        totalPages: Math.ceil(result.count / limit),
-        data: result.rows
+        limit: Number(limit),
+        totalRecords: employees.count,
+        totalPages: Math.ceil(employees.count / limit),
+        employees: employees.rows
     };
 };
 
@@ -244,78 +246,6 @@ function generateToken(){
         token,
         tokenHash
     }
-};
-
-// Pagination
-const buildPagination = (page) => {
-    const limit = 25;
-    const offset = (page - 1) * limit;
-    return {
-        limit,
-        offset
-    }
-};
-
-// Field Selection
-const buildAttributes = (fields) => {
-    const allowedFields=["id","firstName","lastName","photoURL","isActive","createdAt","updatedAt"];
-    if(!fields){
-        return allowedFields;
-    }
-
-    return fields
-        .split(",")
-        .map(field => field.trim())
-        .filter(field => allowedFields.includes(field));
-}
-
-// Filter
-const buildFilter = (filter) => {
-    const where = {};
-
-    if (filter.isActive !== undefined) {
-        where.isActive = filter.isActive === "true";
-    }
-    return where;
-};
-
-// Search
-const buildSearch = (search) => {
-    if (!search) return {};
-
-    return {
-        [Op.or]: [
-            {
-                firstName: {
-                    [Op.like]: `%${search}%`
-                }
-            },
-            {
-                lastName: {
-                    [Op.like]: `%${search}%`
-                }
-            }
-        ]
-    };
-};
-
-// Sorting
-const buildOrder = (sort) => {
-    if(!sort){
-        return [];
-    }
-    const {field, direction="asc"} = sort.split(":");
-    const allowedSortFields = ["lastName","firstName"];
-    const allowedDirections = ["asc", "desc"];
-
-    if (!allowedSortFields.includes(field)) {
-        return [];
-    }
-    if (!allowedDirections.includes(direction)){
-        return [];
-    }
-
-    return [[field, direction.toUpperCase()]];
 };
 
 

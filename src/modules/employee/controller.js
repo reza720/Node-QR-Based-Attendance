@@ -101,15 +101,13 @@ export const generateNewQRcode = async (req, res, next) => {
 };
 // Read all employees:
 // Input: query parameters from req.query
-// Supports: pagination, searching, filtering, sorting, field selection
-// Output: success, status code, message, data, pagination
+// Output: success, status code, message, data
 export const getEmployees = async (req, res, next) => {
     try {
         const employees = await employeeService.getEmployees({
             page: req.query.page,
-            sort: req.query.sort,
-            fields: req.query.fields,
-            filter: {isActive: req.query.isActive},
+            limit: req.query.limit,
+            isActive: req.query.isActive,
             search: req.query.search
         });
     
