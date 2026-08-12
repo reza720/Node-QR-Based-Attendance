@@ -120,8 +120,22 @@ export const getEmployees = async (req, res, next) => {
         next(err);
     }
 };
-
-
+// Get One Employee Attendances
+// Input: employeeId from params
+// Output: attendance record of employee with his basic info
+export const getEmployeeAttendances = async (req, res, next) => {
+    try{
+        const attendances = await employeeService.getEmployeeAttendances(req.params.id);
+        res.status(200).json({
+            success: true,
+            message: "Attendance of employee fetched",
+            attendances
+        });
+    }
+    catch(err){
+        next(err);
+    }
+}
 
 
 

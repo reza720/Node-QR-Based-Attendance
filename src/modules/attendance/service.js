@@ -55,7 +55,7 @@ export const scanAttendance = async (token) => {
 // getTodaysAttendance
 // input: nothing
 // output: rows (employee basic details + attendace)
-export const getTodayAttendance = () => {
+export const getTodayAttendance = async () => {
     const today = new Date().toISOString().split("T")[0];
     const todayAttendance = await Attendance.findAll({
         where: {
@@ -126,7 +126,8 @@ export const getAttendances = async (options = {}) => {
             }
         ],
         limit: Number(limit),
-        offset
+        offset,
+        order: [["date","DECS"]]
     });
 
     return {

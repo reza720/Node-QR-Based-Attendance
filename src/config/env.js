@@ -18,6 +18,9 @@ const env = {
         dbUser: process.env.DB_USER,
         dbPassword: process.env.DB_PASSWORD,
         dbHost: process.env.DB_HOST
+    },
+    session:{
+        sessionSecret:process.env.SESSION_SECRET
     }
 };
 

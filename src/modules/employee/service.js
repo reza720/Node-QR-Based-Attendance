@@ -3,20 +3,22 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import qrcode from "qrcode";
 import crypto from "node:crypto";
-import { Op } from "sequelize";
+import { Model, Op } from "sequelize";
 import sequelize from "../../database/sequelize.js";
 
 import Employee from "./model.js";
 import throwError from "../../utils/throwError.js"
 import deleteFile from "../../utils/deleteFile.js";
+import Attendance from "../attendance/model.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const QRcodeDir = path.join(__dirname, "../../../storage/QRcodes");
 
-// register: 
-// input: firstName, lastName
-// output: employee registed in DB, QR generated, data returned
+// Register:
+// Input: firstName, lastName
+// Output: Employee registered in the database,
+// QR code generated, newly registered employee data returned
 export const registerEmployee = async ({ firstName, lastName }) => {
     const transaction = await sequelize.transaction();
     console.log("Transaction starts");
@@ -55,9 +57,10 @@ export const registerEmployee = async ({ firstName, lastName }) => {
         throw error;
     }
 };
-// upload photo
-// input: employeeId, file
-// output: photo is upload and path is stored in db, retunr file back front end
+// Upload Photo:
+// Input: employeeId, file
+// Output: Photo uploaded, file path stored in the database,
+// and file data returned to the frontend
 export const uploadPhoto = async (employeeId, file) => {
     if(!file) throwError("File not found", 400);
 
@@ -84,9 +87,9 @@ export const uploadPhoto = async (employeeId, file) => {
 
     return employee.photoURL;
 }
-// read one emplyee
-// input: employee id
-// output: full data of employee
+// Get One Employee:
+// Input: employeeId
+// Output: Full employee data
 export const getEmployee = async (employeeId) => {
     const employee = await Employee.findByPk(employeeId);
     if(!employee) throwError("Employee not found", 404);
@@ -99,9 +102,9 @@ export const getEmployee = async (employeeId) => {
         QRcode: employee.QRcodePath
     };
 }
-// update one employee: 
-// input: id from params, data(names, photo, isActive) from body
-// output: update happend in the DB
+// Update One Employee:
+// Input: employee new Data
+// Output: Employee data updated in the database
 export const updateEmployee = async (employeeId, data, file) => {
     const employee = await Employee.findByPk(employeeId);
     if (!employee) {
@@ -140,9 +143,9 @@ export const updateEmployee = async (employeeId, data, file) => {
         QRcode: employee.QRcodePath
     };
 };
-// Delete employee
-// input: id
-// output: deleted in DB
+// Delete Employee:
+// Input: employeeId
+// Output: Employee deleted from the database
 export const deleteEmployee = async (employeeId) => {
     const employee = await Employee.findByPk(employeeId);
     if(!employee) throwError("Employee not found", 404);
@@ -156,9 +159,10 @@ export const deleteEmployee = async (employeeId) => {
         await deleteFile(photoURL);
     }
 }
-// Generate new QR
-// input: employee id
-// output: new token generated hashed replaced for the past one, QR generated from new one
+// Generate New QR:
+// Input: employeeId
+// Output: New token generated, hashed token replaces the previous one,
+// and a new QR code is generated
 export const generateNewQRcode = async (employeeId) => {
     const employee = await Employee.findByPk(employeeId);
     if (!employee) throwError("Employee not found", 404);
@@ -187,10 +191,10 @@ export const generateNewQRcode = async (employeeId) => {
         QRcodePath: employee.QRcodePath
     };
 };
-// Read all employees
-// input: pagination, sort by first(ASC default), filter by isActive
-// Search by first or lastname
-// output: employees list + pagination metadata
+// Get All Employees:
+// Input: pagination, sorting by firstName (ASC by default), isActive filter,
+// search by firstName or lastName
+// Output: Employee list with pagination metadata
 export const getEmployees = async (options = {}) => {
     const {
         page = 1,
@@ -225,6 +229,38 @@ export const getEmployees = async (options = {}) => {
         totalPages: Math.ceil(employees.count / limit),
         employees: employees.rows
     };
+};
+
+// Get Employee Attendance
+// Input: EmployeeId
+// Output: All Attendance of an Employee 
+export const getEmployeeAttendances = async (employeeId) => {
+    const employee = await Employee.findByPk(employeeId);
+    if(!employee) throwError("Employee not found", 404);
+
+    const employeeAttendances = await Attendance.findAll({
+        where: {
+            employeeId
+        },
+        include: [
+            {
+                model: Employee,
+                attributes: [
+                    "id",
+                    "firstName",
+                    "lastName"
+                ]
+            }
+        ],
+        attributes: [
+            "date",
+            "checkInTime",
+            "checkOutTime"
+        ]
+    });
+    if(employeeAttendances.length === 0) throwError("Employee has no attendance", 400);
+
+    return employeeAttendances;
 };
 
 
