@@ -7,7 +7,8 @@ const sequelize = new Sequelize(
     env.database.dbPassword,{
         host: env.database.dbHost,
         dialect: "mysql",
-        logging: false
+        logging: false,
+        timezone: "+04:30"
     }
 );
 

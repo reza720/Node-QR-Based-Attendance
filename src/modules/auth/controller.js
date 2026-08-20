@@ -1,21 +1,5 @@
 import * as userService from "./service.js";
 
-// signup
-// input: userName and password from req body
-// res: status, success, message, user data
-export const signup = async (req, res, next) => {
-    try{
-        const user = await userService.signup(req.body);
-        res.status(201).json({
-            success: true,
-            message: "User created",
-            user
-        });
-    }
-    catch(err){
-        next(err);
-    }
-};
 // loging
 // input: userName and password
 // create session with user id

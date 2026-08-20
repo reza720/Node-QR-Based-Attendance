@@ -16,7 +16,9 @@ export const scanAttendance = async (token) => {
     });
 
     if (!employee) throwError("Employee not found", 400);
-    if (employee.isActive === false) throwError("Employee is deactivated", 400);
+    if (employee.isActive === false) {
+        throwError("Employee is deactivated", 400);
+    }
 
     const currentDateTime = new Date();
     const today = currentDateTime.toISOString().split("T")[0];
@@ -28,6 +30,8 @@ export const scanAttendance = async (token) => {
         }
     });
 
+    let attendance;
+
     if (!todayAttendance) {
         attendance = await Attendance.create({
             employeeId: employee.id,
@@ -36,7 +40,7 @@ export const scanAttendance = async (token) => {
             checkOutTime: null
         });
     } else if (todayAttendance.checkOutTime === null) {
-        await todayAttendance.update({
+        attendance = await todayAttendance.update({
             checkOutTime: currentDateTime
         });
     } else {
@@ -49,7 +53,9 @@ export const scanAttendance = async (token) => {
         date: attendance.date,
         checkInTime: attendance.checkInTime,
         checkOutTime: attendance.checkOutTime,
-        action: attendance.checkOutTime ? "checked-out" : "checked-in"
+        action: attendance.checkOutTime
+            ? "checked-out"
+            : "checked-in"
     };
 };
 // getTodaysAttendance
@@ -127,7 +133,7 @@ export const getAttendances = async (options = {}) => {
         ],
         limit: Number(limit),
         offset,
-        order: [["date","DECS"]]
+        order: [["date","DESC"]]
     });
 
     return {

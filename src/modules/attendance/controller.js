@@ -5,7 +5,7 @@ import * as attendanceService from "./service.js";
 // res: success, status, message, and data returned from service
 export const scanAttendance = async (req, res, next)=> {
     try{
-        const attendance = await attendanceService.scanAttendanceService(req.body);
+        const attendance = await attendanceService.scanAttendance(req.body.token);
         res.status(200).json({
             success: true,
             message: "Attendance marked",
